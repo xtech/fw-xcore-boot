@@ -123,9 +123,19 @@ def discover_boards(timeout, interface_ip=None):
                 data, address = rx_sock.recvfrom(1024)
                 # Ignore messages from ourselves
                 message = data.decode().strip()
-                if message == 'DISCOVER_REQUEST':
+                if message == 'DISCOVER_REQUEST' or message == 'RESET':
                     continue
-                print(f"Received advertisement from {address[0]}: {data.decode().strip()}")
+                info = data.decode().strip()
+                print(f"Received advertisement from {address[0]}: {info}")
+                # Reset the board, if in application mode
+                if info.endswith("application-mode"):
+                    # only resend on timeout
+                    print("Board in application mode, sending RESET to board")
+                    tx_sock.sendto(b'RESET', (address[0], BROADCAST_PORT))
+                    try_number = 0
+                    sent = False
+                    continue
+
                 # Return the IP of the first board that responds
                 return address[0]
             except socket.timeout:

@@ -44,7 +44,6 @@
   <component name="ChangeListManager">
     <list default="true" id="1bb55a81-22ac-441c-9b50-0667791a71de" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../host-software/xbot-boot.py" beforeDir="false" afterPath="$PROJECT_DIR$/../host-software/xbot-boot.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -254,7 +253,7 @@
       <workItem from="1734454374229" duration="8233000" />
       <workItem from="1734706790355" duration="110000" />
       <workItem from="1734708068070" duration="95000" />
-      <workItem from="1737997615096" duration="601000" />
+      <workItem from="1737997615096" duration="3140000" />
     </task>
     <servers />
   </component>
