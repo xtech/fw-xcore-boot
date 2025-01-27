@@ -5,7 +5,9 @@
   </component>
   <component name="BackendCodeEditorMiscSettings">
     <option name="/Default/Housekeeping/GlobalSettingsUpgraded/IsUpgraded/@EntryValue" value="true" type="bool" />
-    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="264" type="long" />
+    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="265" type="long" />
+    <option name="/Default/Housekeeping/RefactoringsMru/CppRenameRefactoring/DoRenameRelatedFiles/@EntryValue" value="false" type="bool" />
+    <option name="/Default/Housekeeping/RefactoringsMru/RenameRefactoring/DoQuickRename/@EntryValue" value="false" type="bool" />
   </component>
   <component name="CMakePresetLoader">{
   &quot;useNewFormat&quot;: true
@@ -40,7 +42,10 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1bb55a81-22ac-441c-9b50-0667791a71de" name="Changes" comment="" />
+    <list default="true" id="1bb55a81-22ac-441c-9b50-0667791a71de" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../host-software/xbot-boot.py" beforeDir="false" afterPath="$PROJECT_DIR$/../host-software/xbot-boot.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -111,27 +116,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Embedded GDB Server.xcore-jlink.executor&quot;: &quot;Debug&quot;,
-    &quot;RunOnceActivity.RadMigrateCodeStyle&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;cf.advertisement.text.overridden&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/clemens/Dev/fw-openmower-v2&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;CMakeSettings&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Embedded GDB Server.xcore-jlink.executor": "Debug",
+    "RunOnceActivity.RadMigrateCodeStyle": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.advertisement.text.overridden": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/home/clemens/Dev/xcore.boot/bootloader",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "CMakeSettings",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="Embedded GDB Server.xcore-jlink">
     <configuration name="ChibiOS" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="xcore-boot" TARGET_NAME="ChibiOS" CONFIG_NAME="Debug - Debug">
       <method v="2">
@@ -149,11 +154,6 @@
       </method>
     </configuration>
     <configuration name="SHA256" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="xcore-boot" TARGET_NAME="SHA256" CONFIG_NAME="Debug - Debug">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -227,13 +227,13 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="CMake Application.xcore-boot" />
       <item itemvalue="CMake Application.ChibiOS" />
+      <item itemvalue="CMake Application.SHA256" />
       <item itemvalue="CMake Application.lwipallapps" />
       <item itemvalue="CMake Application.lwipcore" />
       <item itemvalue="CMake Application.lwipmbedtls" />
-      <item itemvalue="CMake Application.SHA256" />
       <item itemvalue="CMake Application.stm32h7xx_hal" />
+      <item itemvalue="CMake Application.xcore-boot" />
       <item itemvalue="Embedded GDB Server.xcore-jlink" />
     </list>
   </component>
@@ -252,6 +252,9 @@
       <workItem from="1730365400419" duration="539000" />
       <workItem from="1734365857474" duration="1876000" />
       <workItem from="1734454374229" duration="8233000" />
+      <workItem from="1734706790355" duration="110000" />
+      <workItem from="1734708068070" duration="95000" />
+      <workItem from="1737997615096" duration="601000" />
     </task>
     <servers />
   </component>

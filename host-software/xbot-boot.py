@@ -286,12 +286,92 @@ def upload_file(filename, ip, interface_ip=None):
         sock.close()
         print("Connection closed")
 
-def upload_command(args):
-    """Handles the upload command."""
-    filename = args.filename
-    interface_name = args.interface
+def set_developer_mode(enable_developer_mode, ip, interface_ip=None):
+    """Enables the developer mode for the bootloader
+
+    Args:
+        enable_developer_mode (bool): The new value for the developer mode
+        ip (str): The IP address of the board.
+        interface_ip (str): The IP address of the network interface to use.
+    """
+    try:
+        # Create a TCP socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        # Bind to the interface IP if provided
+        if interface_ip:
+            sock.bind((interface_ip, 0))
+
+        sock.connect((ip, TCP_PORT))
+        print(f"Connected to {ip}:{TCP_PORT}")
+
+        # Wrap the socket with a file-like object
+        sock_file = sock.makefile('rwb')
+
+        # Read variable pairs from the remote
+        variables = {}
+        while True:
+            line = read_protocol_line(sock_file)
+            if line is None:
+                # timeout
+                return
+            if variables.get("BOOTLOADER VERSION") == "xcore-boot v1.0":
+                print("Developer mode not supported on bootloader v1.0")
+                return
+            if line == 'SEND COMMAND':
+                break  # End of variables section
+            if ':' in line:
+                name, value = line.split(':', 1)
+                variables[name.strip()] = value.strip()
+            else:
+                print(f"Invalid variable line: {line}")
+
+        print("Variables received from board:")
+        for name, value in variables.items():
+            print(f"{name}: {value}")
+
+        sock_file.write('SET_DEV_MODE\n'.encode())
+        sock_file.flush()
+        print("Sent SET_DEV_MODE to board")
+
+        # Wait for "SEND DEV_MODE_ENABLED" response
+        response = read_protocol_line(sock_file)
+        if response != 'SEND DEV_MODE_ENABLED':
+            print(f"Unexpected response after sending SET_DEV_MODE: {response}")
+            return
+        print("Received HASH OK")
+
+        if enable_developer_mode:
+            sock_file.write('1\n'.encode())
+        else:
+            sock_file.write('0\n'.encode())
+        sock_file.flush()
+
+        print("Sent new value to board")
+
+        # read back for CLI output
+        read_protocol_line(sock_file)
+    except Exception as e:
+        print(f"Error during set dev mode: {e}")
+    finally:
+        sock.close()
+        print("Connection closed")
+
+def service_discovery(interface_name, target_ip):
+    """
+    Discovers xcore boards in the network and returns the board's IP and
+    optionally an interface IP, if a non-standard network interface was requests
+    Args:
+        interface_name: The name of the interface to bind to or None for automatic mode
+        target_ip: The IP address of the board to skip service discovery or None for automatic mode
+
+    Returns:
+        a tuple with (board_ip, interface_ip|None) | None
+    """
     interface_ip = None
-    target_ip = args.target_ip
+    # If target IP is provided, skip service discovery
+    if target_ip:
+        return target_ip, None
 
     # If interface_name is specified, get the IP address, so that we can bind to the requested interface
     if interface_name:
@@ -299,27 +379,51 @@ def upload_command(args):
         if interface_ip is not None:
             print(f"Using interface {interface_name} with IP {interface_ip}")
         else:
-            return
-
-    # If target IP is provided, skip service discovery
-    if target_ip:
-        print(f"Using target IP: {target_ip}, skipping service discovery.")
-        board_ip = target_ip
+            print(f"Error binding to interface with name {interface_name}")
+            return None, None
+    # Discover boards
+    board_ip = discover_boards(TIMEOUT, interface_ip)
+    if board_ip is None:
+        print("No boards found")
+        return None, None
     else:
-        # Discover boards
-        board_ip = discover_boards(TIMEOUT, interface_ip)
-        if board_ip is None:
-            print("No boards found")
-            return
-        else:
-            print(f"Found board at {board_ip}")
+        print(f"Found board at {board_ip}")
+        return board_ip, interface_ip
 
+
+def upload_command(args):
+    """Handles the upload command."""
+    filename = args.filename
+    interface_name = args.interface
+    target_ip = args.target_ip
+
+    board_ip, interface_ip = service_discovery(interface_name, target_ip)
+    if board_ip is None:
+        return
     # Upload file to board
     try:
         upload_file(filename, board_ip, interface_ip)
     except Exception as e:
         print(f"Error uploading file: {e}")
         return
+
+def set_dev_mode_command(args):
+    """Handles the set_dev_mode command"""
+    interface_name = args.interface
+    target_ip = args.target_ip
+
+    if (args.enable and args.disable) or (not args.enable and not args.disable):
+        print("Illegal Argument: Need to either specify enable or disable")
+        return
+    enable = args.enable
+
+    board_ip, interface_ip = service_discovery(interface_name, target_ip)
+    if board_ip is None:
+        return
+
+    set_developer_mode(enable, board_ip, interface_ip)
+
+
 
 def main():
     """Main function to parse arguments and execute commands."""
@@ -332,10 +436,17 @@ def main():
     upload_parser = subparsers.add_parser('upload', help='Upload an image to the board')
     upload_parser.add_argument('filename', help='Image file to upload')
 
+    # Set dev mode command
+    set_dev_mode_parser = subparsers.add_parser('set_dev_mode', help="Set the development mode")
+    set_dev_mode_parser.add_argument('--enable', help="Enable development mode", action='store_true')
+    set_dev_mode_parser.add_argument('--disable', help="Disable development mode", action='store_true')
+
     args = parser.parse_args()
 
     if args.command == 'upload':
         upload_command(args)
+    elif args.command == 'set_dev_mode':
+        set_dev_mode_command(args)
     else:
         parser.print_help()
 
