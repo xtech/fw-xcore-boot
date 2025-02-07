@@ -83,6 +83,14 @@ jobs:
       run:
         working-directory: ./host-software
     steps:
+      - name: Prepare
+        env:
+          REPOSITORY: '${{ github.repository }}'
+        run: |
+          build_arch=${{ matrix.docker_build_arch }}
+          echo "BUILD_ARCH=${build_arch//\//-}" >> ${GITHUB_ENV}
+
+          echo "REPOSITORY_LC=${REPOSITORY,,}" >> ${GITHUB_ENV}
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx
         id: buildx
@@ -97,7 +105,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/${{ github.REPOSITORY_LC }}
       - name: Build and push
         id: build-and-push
         uses: docker/build-push-action@v5
