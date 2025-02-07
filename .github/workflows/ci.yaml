@@ -103,7 +103,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: host-software
-          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: ${{ matrix.docker_build_arch }}
           outputs: type=image,name=ghcr.io/${{ env.REPOSITORY_LC }},push-by-digest=true,name-canonical=true,push=true
