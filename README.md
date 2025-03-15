@@ -24,7 +24,7 @@ The bootloader is split into two components:
 ### Docker
 The host software is provided as docker image, so uploading a firmware file is as easy as running:
 ```bash
-docker run --rm -it --network=host -v/path/to/your/firmware:/workdir ghcr.io/clemenselflein/xcore.boot:main upload /workdir/firmware.bin
+docker run --rm -it --network=host -v/path/to/your/firmware:/workdir ghcr.io/xtech/fw-xcore-boot:main upload /workdir/firmware.bin
 ```
 
 ### Without Docker
