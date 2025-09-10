@@ -185,7 +185,11 @@ def upload_file(filename, ip, interface_ip=None):
         filename (str): The path to the file to upload.
         ip (str): The IP address of the board.
         interface_ip (str): The IP address of the network interface to use.
+
+    Returns:
+        bool: True on success, False on error.
     """
+    sock = None
     try:
         # Read the file contents
         file_contents = read_file(filename)
@@ -213,7 +217,7 @@ def upload_file(filename, ip, interface_ip=None):
         while True:
             line = read_protocol_line(sock_file)
             if line is None:
-                return
+                return False
             if variables.get("BOOTLOADER VERSION") == "xcore-boot v1.0" and line == "SEND HASH":
                 break
             if line == 'SEND COMMAND':
@@ -237,7 +241,7 @@ def upload_file(filename, ip, interface_ip=None):
             response = read_protocol_line(sock_file)
             if response != 'SEND HASH':
                 print(f"Unexpected response after sending command: {response}")
-                return
+                return False
             print("Received SEND HASH")
 
         # Send SHA256 as hex string
@@ -249,14 +253,14 @@ def upload_file(filename, ip, interface_ip=None):
         response = read_protocol_line(sock_file)
         if response != 'HASH OK':
             print(f"Unexpected response after sending SHA256: {response}")
-            return
+            return False
         print("Received HASH OK")
 
         # Wait for "SEND LENGTH" response
         response = read_protocol_line(sock_file)
         if response != 'SEND LENGTH':
             print(f"Unexpected response after sending SHA256: {response}")
-            return
+            return False
 
         # Send file length
         sock_file.write((str(file_length) + '\n').encode())
@@ -267,13 +271,13 @@ def upload_file(filename, ip, interface_ip=None):
         response = read_protocol_line(sock_file)
         if response != 'LENGTH OK':
             print(f"Unexpected response after sending file length: {response}")
-            return
+            return False
 
         # Wait for "SEND DATA" response
         response = read_protocol_line(sock_file)
         if response != 'SEND DATA':
             print(f"Unexpected response after sending file length: {response}")
-            return
+            return False
 
         # Send file content as binary data with progress bar
         print("Uploading file...")
@@ -289,11 +293,14 @@ def upload_file(filename, ip, interface_ip=None):
                 total_sent += len(chunk)
                 pbar.update(len(chunk))
         print("File content sent")
+        return True
 
     except Exception as e:
         print(f"Error during file upload: {e}")
+        return False
     finally:
-        sock.close()
+        if sock:
+            sock.close()
         print("Connection closed")
 
 def set_developer_mode(enable_developer_mode, ip, interface_ip=None):
@@ -303,7 +310,11 @@ def set_developer_mode(enable_developer_mode, ip, interface_ip=None):
         enable_developer_mode (bool): The new value for the developer mode
         ip (str): The IP address of the board.
         interface_ip (str): The IP address of the network interface to use.
+
+    Returns:
+        bool: True on success, False on error.
     """
+    sock = None
     try:
         # Create a TCP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -324,10 +335,10 @@ def set_developer_mode(enable_developer_mode, ip, interface_ip=None):
             line = read_protocol_line(sock_file)
             if line is None:
                 # timeout
-                return
+                return False
             if variables.get("BOOTLOADER VERSION") == "xcore-boot v1.0":
                 print("Developer mode not supported on bootloader v1.0")
-                return
+                return False
             if line == 'SEND COMMAND':
                 break  # End of variables section
             if ':' in line:
@@ -348,7 +359,7 @@ def set_developer_mode(enable_developer_mode, ip, interface_ip=None):
         response = read_protocol_line(sock_file)
         if response != 'SEND DEV_MODE_ENABLED':
             print(f"Unexpected response after sending SET_DEV_MODE: {response}")
-            return
+            return False
         print("Received HASH OK")
 
         if enable_developer_mode:
@@ -361,10 +372,13 @@ def set_developer_mode(enable_developer_mode, ip, interface_ip=None):
 
         # read back for CLI output
         read_protocol_line(sock_file)
+        return True
     except Exception as e:
         print(f"Error during set dev mode: {e}")
+        return False
     finally:
-        sock.close()
+        if sock:
+            sock.close()
         print("Connection closed")
 
 def service_discovery(interface_name, target_ip):
@@ -402,41 +416,57 @@ def service_discovery(interface_name, target_ip):
 
 
 def upload_command(args):
-    """Handles the upload command."""
+    """Handles the upload command.
+
+    Returns:
+        int: 0 on success, non-zero on error.
+    """
     filename = args.filename
     interface_name = args.interface
     target_ip = args.target_ip
 
     board_ip, interface_ip = service_discovery(interface_name, target_ip)
     if board_ip is None:
-        return
+        return 2
     # Upload file to board
     try:
-        upload_file(filename, board_ip, interface_ip)
+        ok = upload_file(filename, board_ip, interface_ip)
+        if not ok:
+            return 4
     except Exception as e:
         print(f"Error uploading file: {e}")
-        return
+        return 3
+    return 0
 
 def set_dev_mode_command(args):
-    """Handles the set_dev_mode command"""
+    """Handles the set_dev_mode command
+
+    Returns:
+        int: 0 on success, non-zero on error.
+    """
     interface_name = args.interface
     target_ip = args.target_ip
 
     if (args.enable and args.disable) or (not args.enable and not args.disable):
         print("Illegal Argument: Need to either specify enable or disable")
-        return
+        return 2
     enable = args.enable
 
     board_ip, interface_ip = service_discovery(interface_name, target_ip)
     if board_ip is None:
-        return
+        return 2
 
-    set_developer_mode(enable, board_ip, interface_ip)
+    ok = set_developer_mode(enable, board_ip, interface_ip)
+    return 0 if ok else 4
 
 
 
 def main():
-    """Main function to parse arguments and execute commands."""
+    """Main function to parse arguments and execute commands.
+
+    Returns:
+        int: process exit code, 0 on success, non-zero on error.
+    """
     parser = argparse.ArgumentParser(description='xcore-upload utility')
     parser.add_argument('-i', '--interface', help='Network interface to use for communication')
     parser.add_argument('--target-ip', help='IP address of the target board (skip service discovery)')
@@ -454,11 +484,12 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'upload':
-        upload_command(args)
+        return upload_command(args)
     elif args.command == 'set_dev_mode':
-        set_dev_mode_command(args)
+        return set_dev_mode_command(args)
     else:
         parser.print_help()
+        return 1
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
