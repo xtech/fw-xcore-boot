@@ -143,9 +143,9 @@ int main(void) {
   // Wait for the interface to come up (DHCP)
   event_listener_t event_listener;
   chEvtRegister(&netif_events, &event_listener, 0);
-  // 10 second timeout
+  // Wait for DHCP without a timeout.
   eventmask_t events =
-      chEvtWaitAnyTimeout(NETIF_EVENT_ADDRESS_VALID, TIME_S2I(10));
+      chEvtWaitAnyTimeout(NETIF_EVENT_ADDRESS_VALID, TIME_INFINITE);
   bool got_address = (events & NETIF_EVENT_ADDRESS_VALID) != 0;
   if (got_address) {
     // Start Service Discovery and Bootloader Thread
@@ -172,6 +172,9 @@ int main(void) {
       }
     }
 #endif
+  } else {
+    // Should not be here, reboot and try again
+    NVIC_SystemReset();
   }
 
   while (1) {

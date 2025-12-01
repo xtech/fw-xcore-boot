@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="BackendCodeEditorMiscSettings">
-    <option name="/Default/Housekeeping/GlobalSettingsUpgraded/IsUpgraded/@EntryValue" value="true" type="bool" />
     <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="265" type="long" />
+    <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
+    <option name="/Default/Housekeeping/GlobalSettingsUpgraded/IsUpgraded/@EntryValue" value="true" type="bool" />
     <option name="/Default/Housekeeping/RefactoringsMru/CppRenameRefactoring/DoRenameRelatedFiles/@EntryValue" value="false" type="bool" />
     <option name="/Default/Housekeeping/RefactoringsMru/RenameRefactoring/DoQuickRename/@EntryValue" value="false" type="bool" />
   </component>
@@ -43,7 +44,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1bb55a81-22ac-441c-9b50-0667791a71de" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/editor.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/editor.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -121,18 +124,23 @@
     "RunOnceActivity.RadMigrateCodeStyle": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.west.config.association.type.startup.service": "true",
     "cf.advertisement.text.overridden": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "/home/clemens/Dev/xcore.boot/bootloader",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/home/clemens/Dev/fw-xcore-boot/bootloader",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "CMakeSettings",
+    "to.speed.mode.migration.done": "true",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -153,6 +161,11 @@
       </method>
     </configuration>
     <configuration name="SHA256" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="xcore-boot" TARGET_NAME="SHA256" CONFIG_NAME="Debug - Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -208,9 +221,8 @@
       </method>
     </configuration>
     <configuration name="xcore-jlink" type="com.jetbrains.cidr.embedded.customgdbserver.type" factoryName="com.jetbrains.cidr.embedded.customgdbserver.factory" PROGRAM_PARAMS="-device &quot;STM32H723ZG&quot; -if swd -speed 8000 -port 30127 -nogui -singlerun" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="xcore-boot" TARGET_NAME="xcore-boot" version="1" RUN_TARGET_PROJECT_NAME="xcore-boot" RUN_TARGET_NAME="xcore-boot">
-      <custom-gdb-server version="1" gdb-connect="tcp::30127" executable="/usr/bin/JLinkGDBServer" warmup-ms="0" download-type="ALWAYS" reset-cmd="monitor reset" reset-type="AFTER_DOWNLOAD" connection-mode="REMOTE" gdbserver-enable="true" console-enabled="false" console-port="0">
+      <custom-gdb-server version="1" gdb-connect="tcp::30127" executable="/usr/bin/JLinkGDBServer" warmup-ms="0" download-type="ALWAYS" reset-cmd="monitor reset" reset-type="AFTER_DOWNLOAD">
         <debugger kind="GDB" isBundled="true" />
-        <extra-debugger-params debugger-working-dir="" debugger-env-pass-parent="true" custom-script="" />
       </custom-gdb-server>
       <method v="2">
         <option name="CLION.COMPOUND.BUILD" enabled="true" />
@@ -254,6 +266,7 @@
       <workItem from="1734706790355" duration="110000" />
       <workItem from="1734708068070" duration="95000" />
       <workItem from="1737997615096" duration="3140000" />
+      <workItem from="1764606559689" duration="173000" />
     </task>
     <servers />
   </component>
