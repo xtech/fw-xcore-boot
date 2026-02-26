@@ -107,7 +107,6 @@ int main(void) {
   InitHeartbeat();
   InitStatusLed();
 
-  /*
   // True, when the board was started via power up. If we have a valid image,
   // directly jump to it without waiting.
   bool is_started_from_power_up = RTC->BKP0R != 0xB0043D;
@@ -119,7 +118,6 @@ int main(void) {
     // If fail, we bootload as usual.
     jump_to_user_program();
   }
-  */
 
   SetStatusLedMode(LED_MODE_BLINK_FAST);
 
@@ -159,7 +157,7 @@ int main(void) {
 
     // Timer before starting into user program
 #ifndef LINE_PREVENT_BOOT_BUTTON
-    chThdSleep(TIME_S2I(5));
+    chThdSleep(TIME_S2I(30));
 #else
     // instead of just sleeping, we can poll a user button to keep device from
     // entering user program
