@@ -106,11 +106,23 @@ int main(void) {
   InitHeartbeat();
   InitStatusLed();
 
-  // True, when the board was started via power up. If we have a valid image,
+
+  bool is_developer_mode = false;
+#if defined(BOARD_HAS_EEPROM)
+
+  // Check, if we have a valid image
+  struct bootloader_info info = {0};
+  if (ID_EEPROM_GetBootloaderInfo(&info) && info.developer_mode == 1) {
+      is_developer_mode = true;
+  }
+#endif
+
+
+  // True, when the board was started via power up. If we have a valid image (and no developer mode),
   // directly jump to it without waiting.
   bool is_started_from_power_up = RTC->BKP0R != 0xB0043D;
 
-  if (is_started_from_power_up) {
+  if (is_started_from_power_up && !is_developer_mode) {
     SetStatusLedMode(LED_MODE_BLINK_SLOW);
     // No need to actually catch the return value here.
     // If success, we won't return
@@ -156,26 +168,13 @@ int main(void) {
 
     // Timer before starting into user program
 #ifndef LINE_PREVENT_BOOT_BUTTON
-#if defined(BOARD_HAS_EEPROM)
-
-    // Check, if we have a valid image
-    struct bootloader_info info = {0};
-    if (ID_EEPROM_GetBootloaderInfo(&info)) {
-      if (info.developer_mode == 1) {
+      if (is_developer_mode) {
         // Developer mode, wait 30 seconds to give the user plenty of time to flash.
         chThdSleep(TIME_S2I(30));
       } else {
         // Normal user mode, 5 seconds is enough
         chThdSleep(TIME_S2I(5));
       }
-    } else {
-      // We could not fetch bootloader info, wait 30 seconds to give the user plenty of time to flash
-      chThdSleep(TIME_S2I(30));
-    }
-
-#else
-    chThdSleep(TIME_S2I(30));
-#endif
 #else
     // instead of just sleeping, we can poll a user button to keep device from
     // entering user program
