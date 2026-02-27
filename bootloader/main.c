@@ -23,7 +23,6 @@ void link_up(struct netif *netif) {
 }
 
 void jump_to_user_program(void) {
-  RTC->BKP0R = 0xB0043D;
 #if defined(BOARD_HAS_EEPROM)
 
   // Check, if we have a valid image
@@ -157,7 +156,26 @@ int main(void) {
 
     // Timer before starting into user program
 #ifndef LINE_PREVENT_BOOT_BUTTON
+#if defined(BOARD_HAS_EEPROM)
+
+    // Check, if we have a valid image
+    struct bootloader_info info = {0};
+    if (ID_EEPROM_GetBootloaderInfo(&info)) {
+      if (info.developer_mode == 1) {
+        // Developer mode, wait 30 seconds to give the user plenty of time to flash.
+        chThdSleep(TIME_S2I(30));
+      } else {
+        // Normal user mode, 5 seconds is enough
+        chThdSleep(TIME_S2I(5));
+      }
+    } else {
+      // We could not fetch bootloader info, wait 30 seconds to give the user plenty of time to flash
+      chThdSleep(TIME_S2I(30));
+    }
+
+#else
     chThdSleep(TIME_S2I(30));
+#endif
 #else
     // instead of just sleeping, we can poll a user button to keep device from
     // entering user program
