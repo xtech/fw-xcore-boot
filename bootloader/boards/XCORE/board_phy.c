@@ -28,15 +28,12 @@ void BoardPhy_DetectVariant(const char *board_id, size_t board_id_len) {
     // Unknown, unprogrammed, or checksum-invalid board_id: fall back to the
     // original board so existing hardware keeps working without needing to
     // be reprovisioned.
+    //
+    // Note this makes a correctly programmed ID EEPROM a hard requirement for
+    // xcore-lite: an unprogrammed one lands here, and PhyGsw141_Reset() then
+    // retries forever waiting for a GSW141 that this board does not have.
     board_variant = BOARD_VARIANT_XCORE;
   }
-
-  // TODO: REMOVE BEFORE MERGING. The xcore-lite test board's ID EEPROM is not
-  // programmed yet, so the check above always falls through to
-  // BOARD_VARIANT_XCORE. Forcing the variant here keeps the board testable in
-  // the meantime; leaving it in would send every xcore board down the RTL8201F
-  // path and hang it in PhyGsw141_Reset()'s retry loop, which never gives up.
-  board_variant = BOARD_VARIANT_XCORE_LITE;
 
   // Now that the variant is settled, give the RTL8201F's reset line its final
   // configuration. board.h can only set up a configuration that is safe on
