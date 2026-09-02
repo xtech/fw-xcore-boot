@@ -1,29 +1,29 @@
 #ifndef BOARD_PHY_H
 #define BOARD_PHY_H
 
-#if !defined(_FROM_ASM_)
+// board_ex.h pulls this in from board.h, which some projects also reach from
+// assembly; guard on both spellings so it stays a no-op there.
+#if !defined(_FROM_ASM_) && !defined(__ASSEMBLER__)
 
-#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// Tells the board layer which PHY is fitted, identified by board_id (the
-// xcore/xcore-lite ID EEPROM's board_info.board_id field -- not
-// necessarily null-terminated, hence the explicit length). Must be called
-// once by the application, after it has read the ID EEPROM.
+// Brings up whichever Ethernet PHY this board variant fits: gives the PHY's
+// reset line its final configuration, then re-runs the MAC's PHY init so it
+// actually resets and addresses the chip that is present.
 //
-// Until this has run, BoardPhy_Reset() / BoardPhy_GetAddress() are no-ops.
-// This matters because ChibiOS's halInit() calls the Ethernet MAC driver's
-// init (and with it, these two hooks) automatically, before the application
-// has had any chance to read the ID EEPROM. That first, board-unaware call
-// is therefore harmless by construction; the application calls
-// BoardPhy_DetectVariant() and then re-invokes macInit() once the board is
-// actually known, and that second pass does the real PHY-specific reset and
-// address selection.
-void BoardPhy_DetectVariant(const char *board_id, size_t board_id_len);
+// Called by InitBoardVariant() once GetBoardVariant() can answer; not meant to
+// be called directly from the application.
+//
+// The re-run is needed because ChibiOS's halInit() drives the Ethernet MAC
+// driver's init (and with it BoardPhy_Reset() / BoardPhy_GetAddress()) long
+// before the ID EEPROM can be read. Both hooks deliberately do nothing while
+// the variant is BOARD_VARIANT_NOT_YET_DETECTED, so that first pass is
+// harmless by construction and this second one is the one that counts.
+void BoardPhy_Init(void);
 
 // Board-specific PHY reset, wired up as BOARD_PHY_RESET() in board_ex.h.
 void BoardPhy_Reset(void);
@@ -35,6 +35,6 @@ uint32_t BoardPhy_GetAddress(void);
 }
 #endif
 
-#endif  /* !defined(_FROM_ASM_) */
+#endif /* !defined(_FROM_ASM_) && !defined(__ASSEMBLER__) */
 
 #endif  // BOARD_PHY_H
