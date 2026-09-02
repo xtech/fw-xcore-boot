@@ -103,6 +103,15 @@ int main(void) {
    * RTOS is running.
    */
   InitGlobals();
+
+  // InitGlobals() just read board_info from the ID EEPROM. halInit() (above)
+  // already ran the Ethernet MAC's automatic PHY init once, before that was
+  // possible, so it was a no-op (see board_phy.h). Now that we know which
+  // board this is, detect the PHY and re-run the MAC's PHY init so it
+  // actually resets and addresses the right chip.
+  BoardPhy_DetectVariant(board_info.board_id, sizeof(board_info.board_id));
+  macInit();
+
   InitHeartbeat();
   InitStatusLed();
 
