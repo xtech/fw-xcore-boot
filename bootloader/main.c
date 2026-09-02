@@ -4,6 +4,7 @@
 // clang-format on
 
 #include <board_ex.h>
+#include <board_variant.h>
 #include <bootloader.h>
 #include <globals.h>
 #include <heartbeat.h>
@@ -103,6 +104,13 @@ int main(void) {
    * RTOS is running.
    */
   InitGlobals();
+
+  // InitGlobals() just read board_info from the ID EEPROM, so the board can
+  // now be identified. This applies everything that differs between the board
+  // variants -- currently the Ethernet PHY, which halInit() could only skip
+  // over above (see board_variant.h).
+  InitBoardVariant(board_info.board_id, sizeof(board_info.board_id));
+
   InitHeartbeat();
   InitStatusLed();
 
