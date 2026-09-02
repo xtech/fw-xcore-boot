@@ -1,7 +1,7 @@
 #ifndef BOARD_VARIANT_H
 #define BOARD_VARIANT_H
 
-#if !defined(_FROM_ASM_)
+#if !defined(_FROM_ASM_) && !defined(__ASSEMBLER__)
 
 #include <stddef.h>
 
@@ -35,6 +35,6 @@ board_variant_t GetBoardVariant(void);
 }
 #endif
 
-#endif /* !defined(_FROM_ASM_) */
+#endif /* !defined(_FROM_ASM_) && !defined(__ASSEMBLER__) */
 
 #endif  // BOARD_VARIANT_H

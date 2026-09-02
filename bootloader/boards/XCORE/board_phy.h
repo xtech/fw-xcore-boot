@@ -1,7 +1,9 @@
 #ifndef BOARD_PHY_H
 #define BOARD_PHY_H
 
-#if !defined(_FROM_ASM_)
+// board_ex.h pulls this in from board.h, which some projects also reach from
+// assembly; guard on both spellings so it stays a no-op there.
+#if !defined(_FROM_ASM_) && !defined(__ASSEMBLER__)
 
 #include <stdint.h>
 
@@ -33,6 +35,6 @@ uint32_t BoardPhy_GetAddress(void);
 }
 #endif
 
-#endif /* !defined(_FROM_ASM_) */
+#endif /* !defined(_FROM_ASM_) && !defined(__ASSEMBLER__) */
 
 #endif  // BOARD_PHY_H

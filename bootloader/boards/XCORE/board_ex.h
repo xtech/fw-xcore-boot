@@ -6,8 +6,9 @@
 // The xcore and xcore-lite boards are identical except for the Ethernet
 // PHY (GSW141 vs RTL8201F). BoardPhy_GetAddress()/BoardPhy_Reset() dispatch
 // to the correct one at runtime, based on the ID EEPROM's board_id -- see
-// board_phy.h for why this has to happen as a second pass, after main()
-// re-invokes macInit().
+// board_phy.h for why this has to happen as a second pass, after
+// InitBoardVariant() has identified the board and BoardPhy_Init() has
+// re-invoked macInit().
 #define BOARD_PHY_ADDRESS BoardPhy_GetAddress()
 #define BOARD_PHY_RESET() BoardPhy_Reset()
 
