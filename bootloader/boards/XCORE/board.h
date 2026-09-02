@@ -1051,7 +1051,7 @@
 #define VAL_GPIOF_PUPDR             (PIN_PUPDR_PULLUP(GPIOF_HEARTBEAT_LED_RED) |\
                                      PIN_PUPDR_PULLUP(GPIOF_HEARTBEAT_LED_GREEN) |\
                                      PIN_PUPDR_PULLUP(GPIOF_HEARTBEAT_LED_BLUE) |\
-                                     PIN_PUPDR_FLOATING(GPIOF_RESET_PHY) |  \
+                                     PIN_PUPDR_PULLUP(GPIOF_RESET_PHY) |    \
                                      PIN_PUPDR_PULLUP(GPIOF_PIN4) |         \
                                      PIN_PUPDR_PULLUP(GPIOF_PIN5) |         \
                                      PIN_PUPDR_FLOATING(GPIOF_OCTOSPI_IO3) |\

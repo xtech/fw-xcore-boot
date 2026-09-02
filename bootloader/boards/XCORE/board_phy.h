@@ -22,7 +22,7 @@ extern "C" {
 // is therefore harmless by construction; the application calls
 // BoardPhy_DetectVariant() and then re-invokes macInit() once the board is
 // actually known, and that second pass does the real PHY-specific reset and
-// address detection.
+// address selection.
 void BoardPhy_DetectVariant(const char *board_id, size_t board_id_len);
 
 // Board-specific PHY reset, wired up as BOARD_PHY_RESET() in board_ex.h.

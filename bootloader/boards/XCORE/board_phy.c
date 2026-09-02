@@ -35,8 +35,18 @@ void BoardPhy_DetectVariant(const char *board_id, size_t board_id_len) {
   // programmed yet, so the check above always falls through to
   // BOARD_VARIANT_XCORE. Forcing the variant here keeps the board testable in
   // the meantime; leaving it in would send every xcore board down the RTL8201F
-  // path and hang it in osalSysHalt("MAC failure").
+  // path and hang it in PhyGsw141_Reset()'s retry loop, which never gives up.
   board_variant = BOARD_VARIANT_XCORE_LITE;
+
+  // Now that the variant is settled, give the RTL8201F's reset line its final
+  // configuration. board.h can only set up a configuration that is safe on
+  // both boards, so it leaves RESET_PHY open-drain with a pull-up; that is
+  // enough to hold the PHY out of reset, but a weak, high-impedance high is
+  // exactly what stray coupling can drag low. Driving it push-pull removes
+  // that risk for the rest of the run.
+  if (board_variant == BOARD_VARIANT_XCORE_LITE) {
+    PhyRtl8201f_ConfigureResetLine();
+  }
 }
 
 void BoardPhy_Reset(void) {
@@ -59,7 +69,7 @@ void BoardPhy_Reset(void) {
 uint32_t BoardPhy_GetAddress(void) {
   switch (board_variant) {
     case BOARD_VARIANT_XCORE_LITE:
-      return PhyRtl8201f_FindAddress();
+      return PHY_RTL8201F_ADDRESS;
     case BOARD_VARIANT_XCORE:
       return 31U;
     case BOARD_VARIANT_NOT_YET_DETECTED:
