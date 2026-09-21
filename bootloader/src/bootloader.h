@@ -9,4 +9,8 @@
 
 void InitBootloaderThread(void);
 
+// Validates the image using the normal boot policy and resets into it.
+// Returns only if the application cannot be booted. Hold reboot_mutex once the command thread is running.
+void jump_to_user_program(void);
+
 #endif  // BOOTLOADER_H

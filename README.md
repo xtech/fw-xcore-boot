@@ -55,6 +55,20 @@ To upload a firmware image without Docker, use the `upload` command followed by 
   ./xcore-boot.py --target-ip 192.168.1.100 upload firmware.bin
   ```
 
+## Start the application immediately
+
+With a bootloader that supports `BOOT`, cancel the startup waiting period with:
+
+```bash
+python3 host-software/xbot-boot.py -i eth0 boot
+```
+
+If the board is already in bootloader mode, use `--target-ip <address>` to skip
+discovery. The TCP command is `BOOT\n` after `SEND COMMAND`; the bootloader replies
+`BOOT REQUESTED` and uses the same image validation/developer-mode policy as the
+normal timed boot. Invalid images remain in the bootloader and return
+`BOOT FAILED`. The command does not interrupt an upload in progress.
+
 ## How It Works
 
 1. **Service Discovery:**

@@ -435,6 +435,15 @@ static THD_FUNCTION(bootloader_thread, arg) {
         SetDevMode(connfd);
       } else if (strncmp("GET_DEV_MODE", buffer, command_len) == 0) {
         GetDevMode(connfd);
+      } else if (strcmp("BOOT", (const char *)buffer) == 0) {
+        // The command thread already owns reboot_mutex, so no upload can
+        // overlap this request. Keep the same image/developer-mode checks
+        // as the normal timed boot path; only skip its waiting period.
+        SEND(connfd, "BOOT REQUESTED\n");
+        chThdSleep(TIME_MS2I(100));
+        jump_to_user_program();
+        // A valid application never returns from jump_to_user_program().
+        SEND(connfd, "BOOT FAILED\n");
       } else {
         SEND(connfd, "> Unknown Command\n");
       }

@@ -6,7 +6,6 @@ import socket
 import struct
 import time
 import sys
-from tqdm import tqdm
 
 BROADCAST_PORT = 8007
 TCP_PORT = 8007
@@ -189,6 +188,8 @@ def upload_file(filename, ip, interface_ip=None):
     Returns:
         bool: True on success, False on error.
     """
+    from tqdm import tqdm
+
     sock = None
     try:
         # Read the file contents
@@ -381,6 +382,31 @@ def set_developer_mode(enable_developer_mode, ip, interface_ip=None):
             sock.close()
         print("Connection closed")
 
+def boot_application(ip, interface_ip=None):
+    """Request the normal validated application boot without the startup delay."""
+    try:
+        source = (interface_ip, 0) if interface_ip else None
+        with socket.create_connection((ip, TCP_PORT), timeout=5, source_address=source) as sock:
+            with sock.makefile('rb') as stream:
+                while True:
+                    line = stream.readline(1024)
+                    if not line:
+                        return False
+                    if line == b'SEND COMMAND\n':
+                        sock.sendall(b'BOOT\n')
+                    elif line == b'BOOT REQUESTED\n':
+                        print("Boot request accepted; the bootloader will validate and start the application")
+                        return True
+                    elif line == b'BOOT FAILED\n':
+                        print("Bootloader rejected the application image")
+                        return False
+                    elif line == b'SEND HASH\n':
+                        print("This bootloader does not support the BOOT command")
+                        return False
+    except OSError as exc:
+        print(f"Error requesting application boot: {exc}")
+        return False
+
 def service_discovery(interface_name, target_ip):
     """
     Discovers xcore boards in the network and returns the board's IP and
@@ -393,10 +419,6 @@ def service_discovery(interface_name, target_ip):
         a tuple with (board_ip, interface_ip|None) | None
     """
     interface_ip = None
-    # If target IP is provided, skip service discovery
-    if target_ip:
-        return target_ip, None
-
     # If interface_name is specified, get the IP address, so that we can bind to the requested interface
     if interface_name:
         interface_ip = get_interface_address(interface_name)
@@ -405,6 +427,10 @@ def service_discovery(interface_name, target_ip):
         else:
             print(f"Error binding to interface with name {interface_name}")
             return None, None
+    # Skip discovery when the board is already known, preserving interface selection.
+    if target_ip:
+        return target_ip, interface_ip
+
     # Discover boards
     board_ip = discover_boards(TIMEOUT, interface_ip)
     if board_ip is None:
@@ -481,12 +507,19 @@ def main():
     set_dev_mode_parser.add_argument('--enable', help="Enable development mode", action='store_true')
     set_dev_mode_parser.add_argument('--disable', help="Disable development mode", action='store_true')
 
+    subparsers.add_parser('boot', help='Start the validated application immediately')
+
     args = parser.parse_args()
 
     if args.command == 'upload':
         return upload_command(args)
     elif args.command == 'set_dev_mode':
         return set_dev_mode_command(args)
+    elif args.command == 'boot':
+        board_ip, interface_ip = service_discovery(args.interface, args.target_ip)
+        if board_ip is None:
+            return 2
+        return 0 if boot_application(board_ip, interface_ip) else 4
     else:
         parser.print_help()
         return 1
