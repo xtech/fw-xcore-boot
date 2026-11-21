@@ -23,6 +23,23 @@ void link_up(struct netif *netif) {
   }
 }
 
+/*
+ * Clears the reset cause flags and reboots into the application image.
+ *
+ * RMVF is written here so that the reset we trigger is seen as a plain warm
+ * reset by the next bootloader start. Without it, a POR flag left over from the
+ * last power-on would make every later warm reset look like a power-on, which
+ * would disable the bootloader window for the flashing tools.
+ */
+static void reset_into_application(void) {
+  RTC->BKP0R = 0xB0043D;
+  WRITE_REG(RCC->RSR, RCC_RSR_RMVF);
+  MODIFY_REG(SYSCFG->UR2, SYSCFG_UR2_BOOT_ADD0,
+             (BOOT_ADDRESS >> 16) << SYSCFG_UR2_BOOT_ADD0_Pos);
+  NVIC_SystemReset();
+  while (1);
+}
+
 void jump_to_user_program(void) {
 #if defined(BOARD_HAS_EEPROM)
 
@@ -36,12 +53,7 @@ void jump_to_user_program(void) {
 
   if (info.developer_mode == 1) {
     // Developer mode, reboot into user program
-    RTC->BKP0R = 0xB0043D;
-    MODIFY_REG(SYSCFG->UR2, SYSCFG_UR2_BOOT_ADD0,
-               (BOOT_ADDRESS >> 16) << SYSCFG_UR2_BOOT_ADD0_Pos);
-    NVIC_SystemReset();
-    while (1)
-      ;
+    reset_into_application();
   }
 
   if (info.image_present != 1) {
@@ -61,20 +73,14 @@ void jump_to_user_program(void) {
   sha256_final(&sha256, validate_hash);
   if (memcmp(validate_hash, info.image_sha256, sizeof(validate_hash)) == 0) {
     // Program OK, now we can boot to it.
-    RTC->BKP0R = 0xB0043D;
-    MODIFY_REG(SYSCFG->UR2, SYSCFG_UR2_BOOT_ADD0,
-               (BOOT_ADDRESS >> 16) << SYSCFG_UR2_BOOT_ADD0_Pos);
-    NVIC_SystemReset();
+    reset_into_application();
   } else {
     return;
   }
 
 #else
   // We don't have EEPROM, so we cannot verify the image, just jump to it.
-  RTC->BKP0R = 0xB0043D;
-  MODIFY_REG(SYSCFG->UR2, SYSCFG_UR2_BOOT_ADD0,
-             (BOOT_ADDRESS >> 16) << SYSCFG_UR2_BOOT_ADD0_Pos);
-  NVIC_SystemReset();
+  reset_into_application();
 #endif
 }
 
@@ -82,6 +88,18 @@ void jump_to_user_program(void) {
  * Application entry point.
  */
 int main(void) {
+  /*
+   * Read the reset cause before anything can clear it (PhyGsw141_Reset() writes
+   * RMVF). A real power-on resets RCC->RSR in hardware, while the backup domain
+   * (RTC->BKP0R) already survives below ~1.2 V. On a board that is
+   * parasitically powered through its I2C pull-ups while switched off (e.g. a
+   * BMS holding SDA/SCL at ~1 V pulls 3V3 up to ~0.55 V), BKP0R keeps its magic
+   * across a power cycle even though the MCU saw a proper POR - the bootloader
+   * then ran through DHCP plus its 5/30 s window on every cold start.
+   */
+  const uint32_t reset_flags = RCC->RSR;
+  const bool was_power_on_reset = (reset_flags & RCC_RSR_PORRSTF) != 0;
+
   // Need to disable D-Cache for the Ethernet MAC to work properly
   SCB_DisableDCache();
   /*
@@ -114,23 +132,24 @@ int main(void) {
   InitHeartbeat();
   InitStatusLed();
 
-
   bool is_developer_mode = false;
 #if defined(BOARD_HAS_EEPROM)
 
   // Check, if we have a valid image
   struct bootloader_info info = {0};
   if (ID_EEPROM_GetBootloaderInfo(&info) && info.developer_mode == 1) {
-      is_developer_mode = true;
+    is_developer_mode = true;
   }
 #endif
 
-
-  // True, when the board was started via power up. If we have a valid image (and no developer mode),
-  // directly jump to it without waiting.
-  bool is_started_from_power_up = RTC->BKP0R != 0xB0043D;
-
-  if (is_started_from_power_up && !is_developer_mode) {
+  // True, when the board was started via power up. If we have a valid image
+  // (and no developer mode), directly jump to it without waiting.
+  //
+  // This used to be `RTC->BKP0R != 0xB0043D`, which is not reliable: the backup
+  // domain outlives the rest of the chip when the board is parasitically
+  // powered (see reset_flags above), so a power cycle was mistaken for a warm
+  // reset.
+  if (was_power_on_reset && !is_developer_mode) {
     SetStatusLedMode(LED_MODE_BLINK_SLOW);
     // No need to actually catch the return value here.
     // If success, we won't return
@@ -175,13 +194,14 @@ int main(void) {
 
     // Timer before starting into user program
 #ifndef LINE_PREVENT_BOOT_BUTTON
-      if (is_developer_mode) {
-        // Developer mode, wait 30 seconds to give the user plenty of time to flash.
-        chThdSleep(TIME_S2I(30));
-      } else {
-        // Normal user mode, 5 seconds is enough
-        chThdSleep(TIME_S2I(5));
-      }
+    if (is_developer_mode) {
+      // Developer mode, wait 30 seconds to give the user plenty of time to
+      // flash.
+      chThdSleep(TIME_S2I(30));
+    } else {
+      // Normal user mode, 5 seconds is enough
+      chThdSleep(TIME_S2I(5));
+    }
 #else
     // instead of just sleeping, we can poll a user button to keep device from
     // entering user program
