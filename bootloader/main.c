@@ -17,12 +17,6 @@
 
 #include "lwipthread.h"
 
-void link_up(struct netif *netif) {
-  if (netif->ip_addr.addr != 0) {
-    chEvtBroadcastFlags(&netif_events, NETIF_FLAG_BROADCAST);
-  }
-}
-
 /*
  * Clears the reset cause flags and reboots into the application image.
  *
@@ -173,51 +167,50 @@ int main(void) {
   lwipconf_opts.netmask = 0;
   lwipconf_opts.macaddress = mac_address;
   lwipInit(&lwipconf_opts);
-  netif_set_status_callback(netif_default, link_up);
 
-  // Wait for the interface to come up (DHCP)
-  event_listener_t event_listener;
-  chEvtRegister(&netif_events, &event_listener, 0);
-  // Wait for DHCP without a timeout.
-  eventmask_t events =
-      chEvtWaitAnyTimeout(NETIF_EVENT_ADDRESS_VALID, TIME_INFINITE);
-  bool got_address = (events & NETIF_EVENT_ADDRESS_VALID) != 0;
-  if (got_address) {
-    // Start Service Discovery and Bootloader Thread
-    SetStatusLedMode(LED_MODE_BLINK_SLOW);
-
-    // Start the ServiceDiscovery Task.
-    InitServiceDiscovery();
-
-    // Start the actual Bootloader Task
-    InitBootloaderThread();
-
-    // Timer before starting into user program
-#ifndef LINE_PREVENT_BOOT_BUTTON
-    if (is_developer_mode) {
-      // Developer mode, wait 30 seconds to give the user plenty of time to
-      // flash.
-      chThdSleep(TIME_S2I(30));
-    } else {
-      // Normal user mode, 5 seconds is enough
-      chThdSleep(TIME_S2I(5));
-    }
-#else
-    // instead of just sleeping, we can poll a user button to keep device from
-    // entering user program
-    uint32_t sleep_count = 1000 / 100;
-    while (sleep_count-- > 0) {
-      chThdSleep(TIME_MS2I(100));
-      if (palReadLine(LINE_BUTTON)) {
-        // sleep forever, don't boot into user software
-        chThdSleep(TIME_INFINITE);
-      }
-    }
-#endif
-  } else {
-    // Should not be here, reboot and try again
-    NVIC_SystemReset();
+  // Wait for the interface to come up (DHCP).
+  //
+  // Do NOT wait for the link status callback: the LWIP thread only invokes it
+  // on a link status *change*, and with the old implementation only when an
+  // address was already assigned. On a normal boot the link comes up before
+  // DHCP, so the event never arrived and the bootloader waited for a later link
+  // flap - which is why bringing the board up sometimes took tens of seconds.
+  // Polling the address is race free and needs no callback at all.
+  while (netif_default->ip_addr.addr == 0U) {
+    chThdSleepMilliseconds(100);
   }
+
+  // Start Service Discovery and Bootloader Thread
+  SetStatusLedMode(LED_MODE_BLINK_SLOW);
+
+  // Start the ServiceDiscovery Task.
+  InitServiceDiscovery();
+
+  // Start the actual Bootloader Task
+  InitBootloaderThread();
+
+  // Timer before starting into user program
+#ifndef LINE_PREVENT_BOOT_BUTTON
+  if (is_developer_mode) {
+    // Developer mode, wait 30 seconds to give the user plenty of time to
+    // flash.
+    chThdSleep(TIME_S2I(30));
+  } else {
+    // Normal user mode, 5 seconds is enough
+    chThdSleep(TIME_S2I(5));
+  }
+#else
+  // instead of just sleeping, we can poll a user button to keep device from
+  // entering user program
+  uint32_t sleep_count = 1000 / 100;
+  while (sleep_count-- > 0) {
+    chThdSleep(TIME_MS2I(100));
+    if (palReadLine(LINE_BUTTON)) {
+      // sleep forever, don't boot into user software
+      chThdSleep(TIME_INFINITE);
+    }
+  }
+#endif
 
   while (1) {
     // make sure we're not currently updating the software
