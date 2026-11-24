@@ -3,6 +3,7 @@
 //
 
 #include "globals.h"
+
 #include "hal.h"
 
 // This mutex will be locked by the reboot task as well as by the flash task
